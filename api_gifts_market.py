@@ -12,12 +12,34 @@ class ApiMarketGifts():
             'User-Agent':self.ua,
         }
 
+#region Вспомогательные методы
+
     def get_json_resp(self, url_mid_params):
+        '''
+        Принимает имя метода, за исключением нижнего подчеркивания, в котором вызывается, 
+        для отправки GET запроса по этому URL. 
+        
+        Имя метода == ключевое слово запроса URL
+        '''
+
         r = requests.get(f'{self.BASE_URL}{url_mid_params}{self.SECRET_KEY_URL_PART}', headers=self.headers)
         response = json.loads(r.text)
 
         return response
+    
+    def get_json_resp_post(self, url_mid_params, data):
+        '''
+        Принимает имя метода, за исключением нижнего подчеркивания, в котором вызывается, 
+        а так же параметры POST запроса. 
+        
+        Имя метода == ключевое слово запроса URL
+        '''
+        r = requests.post(f'{self.BASE_URL}{url_mid_params}{self.SECRET_KEY_URL_PART}', headers=self.headers, data=data)
+        response = json.loads(r.text)
 
+        return response
+
+#endregion
 #region Действия с аккаунтом
 
     def get_inv(self):
@@ -126,16 +148,16 @@ class ApiMarketGifts():
 
         return self.get_json_resp('GetMyProfileHash')
 
-    def get_profile_items(self, profile_hash):
+    def get_profile_items(self, hash_):
         '''Получить предметы на продаже из произвольного профиля.
         ВАЖНО! Предметы отображаются только тогда, когда продавец находится в сети и предметы находятся 
         на первом месте в очереди продаж (имеют самую низкую цену).
 
         Параметры запроса:
-            [profile_hash] — Хэш ссылка, которую можно взять либо из метода GetMyProfileHash
+            [hash_] — Хэш ссылка, которую можно взять либо из метода GetMyProfileHash
         '''
 
-        return self.get_json_resp(f'GetProfileItems/{profile_hash}')
+        return self.get_json_resp(f'GetProfileItems/{hash_}')
 
     def get_my_sell_offers(self):
         'Получить только свои предметы, которые находятся на продаже на любом месте в очереди.'
@@ -147,4 +169,26 @@ class ApiMarketGifts():
 
         return self.get_json_resp('GetItemsToGive')
 
+#endregion
+#region Поиск предметов
+    def mass_search_item_by_name(self, items):
+        '''
+        Поиск нескольких предметов (максимум 10) за один POST запрос.
+
+        Параметры запроса (POST):
+            list[0..9] = Название предмета на английском языке (market_hash_name).
+            Использовать так: list[0]=StatTrak™ Glock-18 | Dragon Tattoo (Factory New)&list[1]=StatTrak™ AK-47 | Blue Laminate (Minimal Wear)&...
+        '''
+
+        return self.get_json_resp_post('MassSearchItemByName', items)
+
+    def search_item_by_name(self, market_hash_name):
+        '''
+        Вариант для запроса по одному предмету
+
+        Параметры запроса:
+            [market_hash_name] - Название предмета, которое можно взять из инвентаря Steam.
+        '''
+
+        return self.get_json_resp(f'SearchItemByName/{market_hash_name}')
 #endregion
