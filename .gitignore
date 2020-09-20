@@ -1,1 +1,4 @@
 /env
+.vscode/launch.json
+__pycache__/api_gifts_market.cpython-37.pyc
+.gitignore
