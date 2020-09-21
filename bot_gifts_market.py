@@ -5,7 +5,7 @@ api_key = 'ZbPE1lr1V7eHop2cUuhU11jaahnZPAI'
 
 def main():
     api = api_gifts_market.ApiMarketGifts(api_key)
-    print( api.get_money() )
+    print( api.insert_order() )
 
 if __name__ == '__main__':
     main()

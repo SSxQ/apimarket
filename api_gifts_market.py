@@ -13,32 +13,135 @@ class ApiMarketGifts():
         }
 
 #region Вспомогательные методы
-
-    def get_json_resp(self, url_mid_params):
+    def get_json_resp(self, mid_params, ending_params=''):
         '''
-        Принимает имя метода, за исключением нижнего подчеркивания, в котором вызывается, 
-        для отправки GET запроса по этому URL. 
-        
-        Имя метода == ключевое слово запроса URL
+        Принимает имя метода, за исключением нижнего подчеркивания, в котором вызывается, для отправки GET запроса по этому URL. 
+        Необязательный аргумент - ending_params, параметры, которые идут в URL после Secret Key.
         '''
 
-        r = requests.get(f'{self.BASE_URL}{url_mid_params}{self.SECRET_KEY_URL_PART}', headers=self.headers)
+        r = requests.get(f'{self.BASE_URL}{mid_params}{self.SECRET_KEY_URL_PART}{ending_params}', headers=self.headers)
         response = json.loads(r.text)
 
         return response
     
-    def get_json_resp_post(self, url_mid_params, data):
+    def get_json_resp_post(self, mid_params, data):
         '''
         Принимает имя метода, за исключением нижнего подчеркивания, в котором вызывается, 
         а так же параметры POST запроса. 
-        
-        Имя метода == ключевое слово запроса URL
         '''
-        r = requests.post(f'{self.BASE_URL}{url_mid_params}{self.SECRET_KEY_URL_PART}', headers=self.headers, data=data)
+        r = requests.post(f'{self.BASE_URL}{mid_params}{self.SECRET_KEY_URL_PART}', headers=self.headers, data=data)
         response = json.loads(r.text)
 
         return response
+#endregion
+#region Ордера на покупку
+    def get_orders(self, page=''):
+        '''
+        Получить список своих ордеров, актуальных на данный момент.
 
+        Параметры запроса:
+            [page] — Номер страницы, на странице находится 500 предметов. Опциональный параметр, 
+            если он не будет указан в ответ Вы получите только 2000 ваших заявок.
+        '''
+
+        return self.get_json_resp(f'GetOrders/{page}')
+
+    def insert_order(self, classid, instanceid, price, hash_='', partner='', token=''):
+        '''
+        Создать новый запрос на автоматическую покупку предмета.
+
+        Параметры запроса:
+            [classid] — ClassID предмета в Steam, можно найти в ссылке на предмет
+            [instanceid] — InstanceID предмета в Steam, можно найти в ссылке на предмет
+            [price] — Цена в копейках, целое число
+            [hash_] — Если хотите быть уверены в том, что покупаете (см. метод Buy), не обязательный - можно отправить пустую строку "[price]//?key=..."
+            [partner] — Steam ID пользователя, кому будет передан купленный предмет (необязательный)
+            [token] — Токен из ссылки для обмена пользователя, которому будет передан предмет (необязательный)
+        '''
+        if partner and token:
+            return self.get_json_resp(f'InsertOrder/{classid}/{instanceid}/{price}/{hash_}', f'(&partner={partner}&token={token})')
+        else:
+            return self.get_json_resp(f'InsertOrder/{classid}/{instanceid}/{price}/{hash_}')
+
+    def update_order(self, classid, instanceid, price, partner='', token=''):
+        '''
+        Изменить/удалить запрос на автоматическую покупку предмета.
+
+        Параметры запроса:
+            [classid] — ClassID предмета в Steam, можно найти в ссылке на предмет
+            [instanceid] — InstanceID предмета в Steam, можно найти в ссылке на предмет
+            [price] — Цена в копейках, целое число.
+            [partner] — Steam ID пользователя, кому будет передан купленный предмет (необязательный)
+            [token] — Токен из ссылки для обмена пользователя, которому будет передан предмет (необязательный)
+        ВАЖНО! Для удаления заявки параметр [PRICE] должен равняться нулю (0).
+        '''
+
+        if partner and token:
+            return self.get_json_resp(f'UpdateOrder/{classid}/{instanceid}/{price}', f'(&partner={partner}&token={token})')
+        else:
+            return self.get_json_resp(f'UpdateOrder/{classid}/{instanceid}/{price}')
+
+    def process_order(self, classid, instanceid, price, partner='', token=''):
+        '''
+        С помощью этого метода можно создать, обновить и удалить запрос на автоматическую покупку предмета.
+
+        Если запрос отсутствует - он будет создан, если присутствует - обновлен. При обновлении цены на 0 - ордер будет удален.
+
+        ВНИМАНИЕ! Если будет присутствовать предмет на продаже ценой ниже или равной ордеру - предмет будет сразу куплен 
+        (за цену предмета, ниже цены ордера или равна ему). Если ордер был впервые создан, записи о нем при покупке не появится в логе ордеров (GETORDERSLOG).
+        
+        ВАЖНО! В этом методе не требуется указание хэша, будет куплен предмет без учета проверки хэша.
+
+        Параметры запроса:
+            [classid] — ClassID предмета в Steam, можно найти в ссылке на предмет
+            [instanceid] — InstanceID предмета в Steam, можно найти в ссылке на предмет
+            [price] — Цена в копейках, целое число.
+            [partner] — Steam ID пользователя, кому будет передан купленный предмет (необязательный)
+            [token] — Токен из ссылки для обмена пользователя, которому будет передан предмет (необязательный)
+        ВАЖНО! Для удаления заявки параметр [PRICE] должен равняться нулю (0).
+        '''
+
+        if partner and token:
+            return self.get_json_resp(f'ProcessOrder/{classid}/{instanceid}/{price}', f'(&partner={partner}&token={token})')
+        else:
+            return self.get_json_resp(f'ProcessOrder/{classid}/{instanceid}/{price}')
+
+    def delete_orders(self):
+        'Удалить сразу все запросы на автоматическую покупку предмета.'
+
+        return self.get_json_resp('DeleteOrders')
+
+    def status_orders(self):
+        'Узнать статус работы ордеров.'
+
+        return self.get_json_resp('StatusOrders')
+
+    def get_orders_log(self):
+        'Этот метод помогает узнать историю срабатывания ордеров на автоматическую покупку. Отображается 100 последних ордеров.'
+
+        return self.get_json_resp('GetOrdersLog')
+
+    
+
+#endregion
+#region Уведомления
+    def get_notifications(self):
+        'Получить список включенных уведомлений о изменении цены.'
+
+        return self.get_json_resp('GetNotifications')
+
+    def update_notification(self, classid, instanceid, price):
+        '''Создание/изменение/удаление уведомления о изменении цены на отcлеживаемый предмет.
+        
+        Параметры запроса:
+            [classid] — ClassID предмета в Steam, можно найти в ссылке на предмет
+            [instanceid] — InstanceID предмета в Steam, можно найти в ссылке на предмет
+            [price] — Цена в копейках, целое число.
+        
+        ВАЖНО! Для удаления уведомления, параметр [PRICE] должен равняться нулю (0).
+        '''
+
+        return self.get_json_resp(f'UpdateNotification/{classid}/{instanceid}/{price}')
 #endregion
 #region Действия с аккаунтом
 
