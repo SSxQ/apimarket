@@ -34,6 +34,141 @@ class ApiMarketGifts():
 
         return response
 #endregion
+#region Информация о предметах
+    def item_info(self, classid, instanceid, language):
+        '''
+        Информация и предложения о продаже конкретной вещи.
+
+        Параметры запроса:
+            [classid] — ClassID предмета в Steam, можно найти в ссылке на предмет
+            [instanceid] — InstanceID предмета в Steam, можно найти в ссылке на предмет
+            [language] — на каком языке получить описание предмета, возможные значения ru или en
+        '''
+
+        return self.get_json_resp(f'ItemInfo/{classid}_{instanceid}/{language}')
+
+    def item_history(self, classid, instanceid):
+        '''
+        Информация о ценах и о последних 500 покупках конкретной вещи.
+
+        Параметры запроса:
+            [classid] — ClassID предмета в Steam, можно найти в ссылке на предмет
+            [instanceid] — InstanceID предмета в Steam, можно найти в ссылке на предмет
+        '''
+
+        return self.get_json_resp(f'ItemHistory/{classid}_{instanceid}')
+
+    def mass_info(self, sell, buy, history, info, data):
+        '''
+        Вся информация о предметах в одном месте через POST запрос.
+
+        ВАЖНО! Максимально можно запросить информацию о 100 предметах.
+
+        Параметры запроса (GET данные):
+            [SELL] — Может принимать значения 0,1,2
+            0 - Не получать предложения о продаже
+            1 - Получать топ 50 дешевых предложений + свой
+            2 - Получать только 1 самый дешевый оффер о продаже
+            [BUY] — Может принимать значения 0,1,2
+            0 - Не получать запросы на покупку (ордера)
+            1 - Получать топ 50 самых высоких запросов на покупку (ордеров) + свой
+            2 - Получать только 1 самый высокий запрос на покупку
+            [HISTORY] — Может принимать значения 0,1,2
+            0 - Не получать история торгов по предмету
+            1 - Получить информацию о последних 100 продажах
+            2 - Получить информацию о последних 10 продажах
+            [INFO] — Может принимать значения 0,1,2,3
+            0 - Не получать информацию о предмете
+            1 - Получить базовую информацию (название, тип)
+            2 - Получить дополнительно хэш для покупки, ссылку на картинку
+            3 - Получать дополнительно описание предмета и теги из Steam
+
+        Параметры запроса (POST данные):
+            list — classid_instanceid,classid_instanceid,classid_instanceid,classid_instanceid,... // {'list':'classid_instanceid, ...'}
+        '''
+
+        return self.get_json_resp_post(f'MassInfo/{sell}/{buy}/{history}/{info}', data)
+
+    def get_float_hash(self, classid, instanceid):
+        '''
+        ВАЖНО! Данный метод работает только для вещей из CS:GO
+
+        Получить хэш предмета для запроса Float Value (потертость) со специального сервера
+
+        Параметры запроса:
+            [classid] — ClassID предмета в Steam, можно найти в ссылке на предмет
+            [instanceid] — InstanceID предмета в Steam, можно найти в ссылке на предмет
+        '''
+
+        return self.get_json_resp(f'GetFloatHash/{classid}_{instanceid}')
+
+    def sell_offers(self, classid, instanceid):
+        '''
+        Получить предложения о продаже определенного предмета.
+
+        Параметры запроса:
+            [classid] — ClassID предмета в Steam, можно найти в ссылке на предмет
+            [instanceid] — InstanceID предмета в Steam, можно найти в ссылке на предмет
+        '''
+
+        return self.get_json_resp(f'SellOffers/{classid}_{instanceid}')
+
+    def best_sell_offer(self, classid, instanceid):
+        '''
+        Получить лучшее предложения о продаже определенного предмета.
+
+        Параметры запроса:
+            [classid] — ClassID предмета в Steam, можно найти в ссылке на предмет
+            [instanceid] — InstanceID предмета в Steam, можно найти в ссылке на предмет
+        '''
+
+        return self.get_json_resp(f'BestSellOffer/{classid}_{instanceid}')
+
+    def buy_offers(self, classid, instanceid):
+        '''
+        Получить список предложений (ордеров) для продажи предмета. Предмет, выставленный за эту стоимость будет моментально продан.
+
+        Параметры запроса:
+            [classid] — ClassID предмета в Steam, можно найти в ссылке на предмет
+            [instanceid] — InstanceID предмета в Steam, можно найти в ссылке на предмет
+        '''
+
+        return self.get_json_resp(f'BuyOffers/{classid}_{instanceid}')
+
+    def best_buy_offer(self, classid, instanceid):
+        '''
+        Получить самое высокое предложение (ордеров) для продажи предмета. Предмет, выставленный за эту стоимость будет моментально продан.
+
+        Параметры запроса:
+            [classid] — ClassID предмета в Steam, можно найти в ссылке на предмет
+            [instanceid] — InstanceID предмета в Steam, можно найти в ссылке на предмет
+        '''
+
+        return self.get_json_resp(f'BestBuyOffer/{classid}_{instanceid}')
+
+    def get_base_name(self, market_hash_name):
+        '''
+        Получить базовое имя предмета. Базовое имя - название предмета без модификаторов поношенности, раритетности или StatTrack.
+
+        В данный момент поддерживается только в CS:GO.
+
+        Параметры запроса:
+            [market_hash_name] — market_hash_name предмета в Steam
+        '''
+
+        return self.get_json_resp(f'GetBaseName/{market_hash_name}')
+
+    def get_item_description(self, classid, instanceid):
+        '''
+        Получить только описание предмета и хэш для метода Buy.
+
+        Параметры запроса:
+            [classid] — ClassID предмета в Steam, можно найти в ссылке на предмет
+            [instanceid] — InstanceID предмета в Steam, можно найти в ссылке на предмет
+        '''
+
+        return self.get_json_resp(f'GetItemDescription/{classid}_{instanceid}')
+#endregion
 #region Продажа предметов
     def set_price(self, classid, instanceid, price, item_id=''):
         '''
