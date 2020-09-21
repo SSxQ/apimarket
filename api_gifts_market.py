@@ -4,13 +4,8 @@ import json
 class ApiMarketGifts():
 
     def __init__(self, api_key):
-        self.api_key = api_key 
         self.BASE_URL = 'https://gifts.tm/api/'
-        self.SECRET_KEY_URL_PART = f'/?key={self.api_key}'
-        self.ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36'
-        self.headers = {
-            'User-Agent':self.ua,
-        }
+        self.SECRET_KEY_URL_PART = f'/?key={api_key}'
 
 #region Вспомогательные методы
     def get_json_resp(self, mid_params, ending_params=''):
@@ -19,20 +14,18 @@ class ApiMarketGifts():
         Необязательный аргумент - ending_params, параметры, которые идут в URL после Secret Key.
         '''
 
-        r = requests.get(f'{self.BASE_URL}{mid_params}{self.SECRET_KEY_URL_PART}{ending_params}', headers=self.headers)
-        response = json.loads(r.text)
+        r = requests.get(f'{self.BASE_URL}{mid_params}{self.SECRET_KEY_URL_PART}{ending_params}')
 
-        return response
+        return json.loads(r.text)
     
     def get_json_resp_post(self, mid_params, data):
         '''
         Принимает имя метода, за исключением нижнего подчеркивания, в котором вызывается, 
         а так же параметры POST запроса. 
         '''
-        r = requests.post(f'{self.BASE_URL}{mid_params}{self.SECRET_KEY_URL_PART}', headers=self.headers, data=data)
-        response = json.loads(r.text)
+        r = requests.post(f'{self.BASE_URL}{mid_params}{self.SECRET_KEY_URL_PART}', data=data)
 
-        return response
+        return json.loads(r.text)
 #endregion
 #region Информация о предметах
     def item_info(self, classid, instanceid, language):
