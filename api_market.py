@@ -1,10 +1,10 @@
 ﻿import requests
 import json
 
-class ApiMarketGifts():
+class ApiMarket():
 
-    def __init__(self, api_key):
-        self.BASE_URL = 'https://gifts.tm/api/'
+    def __init__(self, api_key, api_url):
+        self.BASE_URL = api_url
         self.SECRET_KEY_URL_PART = f'/?key={api_key}'
 
 #region Вспомогательные методы
